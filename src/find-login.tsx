@@ -2,6 +2,7 @@ import { ActionPanel, CopyToClipboardAction, Icon, List, ListItem, PasteAction }
 import fetch from "node-fetch";
 import $ from "cheerio";
 import { useCallback, useState } from "react";
+import { URL } from "url";
 
 const useMergeState = <T extends object>(initialState: T, callback?: (state: T) => void) => {
   const [state, setState] = useState<T>(initialState);
@@ -18,7 +19,14 @@ const useMergeState = <T extends object>(initialState: T, callback?: (state: T) 
   return [state, setMergedState] as [T, typeof setMergedState];
 };
 
-async function fetchLogins(domain: string) {
+async function fetchLogins(search: string) {
+  let domain;
+  try {
+    domain = new URL(search).hostname;
+  } catch (e) {
+    domain = search;
+  }
+
   return fetch(`http://bugmenot.com/view/${domain}`)
     .then((r) => r.text())
     .then((html) => {

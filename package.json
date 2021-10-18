@@ -1,7 +1,8 @@
 {
   "name": "bugmenot",
   "title": "BugMeNot",
-  "description": "Find account/password on bugmenot",
+  "version": "1.0.0",
+  "description": "Find username/password on BugMeNot",
   "icon": "icon.png",
   "author": "Yukai",
   "license": "MIT",
