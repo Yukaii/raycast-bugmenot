@@ -1,4 +1,4 @@
-import { ActionPanel, CopyToClipboardAction, List, ListItem, PasteAction } from "@raycast/api";
+import { ActionPanel, CopyToClipboardAction, Icon, List, ListItem, PasteAction } from "@raycast/api";
 import fetch from "node-fetch";
 import $ from "cheerio";
 import { useCallback, useState } from "react";
@@ -79,6 +79,7 @@ export default function FindLogin() {
             title={result.login}
             subtitle={result.password}
             accessoryTitle={result.rate}
+            icon={Icon.Person}
             actions={
               <ActionPanel>
                 <PasteAction

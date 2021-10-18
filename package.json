@@ -2,7 +2,7 @@
   "name": "bugmenot",
   "title": "BugMeNot",
   "description": "Find account/password on bugmenot",
-  "icon": "command-icon.png",
+  "icon": "icon.png",
   "author": "Yukai",
   "license": "MIT",
   "commands": [
