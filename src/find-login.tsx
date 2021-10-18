@@ -1,4 +1,12 @@
-import { ActionPanel, CopyToClipboardAction, Icon, List, ListItem, PasteAction } from "@raycast/api";
+import {
+  ActionPanel,
+  CopyToClipboardAction,
+  Icon,
+  List,
+  ListItem,
+  OpenInBrowserAction,
+  PasteAction,
+} from "@raycast/api";
 import fetch from "node-fetch";
 import $ from "cheerio";
 import { useCallback, useState } from "react";
@@ -19,13 +27,18 @@ const useMergeState = <T extends object>(initialState: T, callback?: (state: T) 
   return [state, setMergedState] as [T, typeof setMergedState];
 };
 
-async function fetchLogins(search: string) {
+const getDomainFromSearch = (search: string) => {
   let domain;
   try {
     domain = new URL(search).hostname;
   } catch (e) {
     domain = search;
   }
+  return domain;
+};
+
+async function fetchLogins(search: string) {
+  const domain = getDomainFromSearch(search);
 
   return fetch(`http://bugmenot.com/view/${domain}`)
     .then((r) => r.text())
@@ -36,7 +49,7 @@ async function fetchLogins(search: string) {
         .toArray()
         .map((el) => {
           const $el = $(el);
-          const [login, password] = $el
+          const [login, password, other] = $el
             .find("kbd")
             .toArray()
             .map((el) => $(el).text());
@@ -46,6 +59,7 @@ async function fetchLogins(search: string) {
             login,
             password,
             rate,
+            other,
           };
         });
     });
@@ -53,16 +67,18 @@ async function fetchLogins(search: string) {
 
 type State = {
   loading: boolean;
-  results: Array<{ login: string; password: string; rate: string }>;
+  results: Array<{ login: string; password: string; rate: string; other?: string }>;
+  domain: string;
 };
 
 export default function FindLogin() {
   const [state, setState] = useMergeState<State>({
     loading: false,
     results: [],
+    domain: "",
   });
 
-  const onSearch = useCallback((domain: string) => {
+  const onSearch = useCallback((search: string) => {
     if (state.loading) return;
 
     setState({
@@ -70,10 +86,12 @@ export default function FindLogin() {
       results: [],
     });
 
-    fetchLogins(domain).then((results) => {
+    fetchLogins(search).then((results) => {
+      const domain = getDomainFromSearch(search);
       setState({
         loading: false,
         results,
+        domain,
       });
     });
   }, []);
@@ -81,11 +99,13 @@ export default function FindLogin() {
   return (
     <List onSearchTextChange={onSearch} throttle isLoading={state.loading} searchBarPlaceholder="Search domain...">
       {state.results.map((result) => {
+        const subtitle = result.other ? `${result.password} / ${result.other}` : result.password;
+
         return (
           <ListItem
             key={result.login}
             title={result.login}
-            subtitle={result.password}
+            subtitle={subtitle}
             accessoryTitle={result.rate}
             icon={Icon.Person}
             actions={
@@ -107,8 +127,11 @@ export default function FindLogin() {
                   }}
                 />
 
+                <OpenInBrowserAction url={`http://bugmenot.com/view/${state.domain}`} title="View on BugMeNot" />
+
                 <CopyToClipboardAction content={result.login} title="Copy login" />
                 <CopyToClipboardAction content={result.password} title="Copy password" />
+                {result.other && <CopyToClipboardAction content={result.other} title="Copy other" />}
               </ActionPanel>
             }
           ></ListItem>
